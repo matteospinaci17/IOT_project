@@ -1,0 +1,1250 @@
+[
+    {
+        "id": "7eb05ca743a737a6",
+        "type": "tab",
+        "label": "VP Dibris Parking",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "66a6a7d1b23e886d",
+        "type": "inject",
+        "z": "7eb05ca743a737a6",
+        "name": "Setup Flow",
+        "props": [
+            {
+                "p": "payload.free_place",
+                "v": "10",
+                "vt": "num"
+            },
+            {
+                "p": "payload.plates",
+                "v": "{\"p_1\":\"forum.cfx.re/uploads/default/original/4X/c/9/5/c956ce02401c92cae5f5d22cf72b7ce7a828a44d.png\",\"p_2\":\"www.mercedes-benz.com/en/classic/history/h-number-plate-2020/_jcr_content/root/paragraph/paragraph-right/paragraphimage/image/MQ6-8-image-20191205151927/02-mercedes-benz-classic-h-number-plate-2020-2560x1440.jpeg\",\"p_3\":\"www.garanziaonline.it/wp-content/uploads/2021/06/targa_auto_fac_simile.jpg\"}",
+                "vt": "json"
+            },
+            {
+                "p": "payload.car_index",
+                "v": "-1",
+                "vt": "num"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 220,
+        "y": 160,
+        "wires": [
+            [
+                "61e746b9de0d0784"
+            ]
+        ]
+    },
+    {
+        "id": "b17e01fe7f657bb2",
+        "type": "mysql",
+        "z": "7eb05ca743a737a6",
+        "mydb": "9940627db2b4df4c",
+        "name": "",
+        "x": 1580,
+        "y": 320,
+        "wires": [
+            [
+                "c4d14e037c59167b"
+            ]
+        ]
+    },
+    {
+        "id": "94cf5ee9bdc6d1d2",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "New Car:",
+        "info": "New Car:",
+        "x": 160,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "c3873b8b96874908",
+        "type": "inject",
+        "z": "7eb05ca743a737a6",
+        "name": "Car detected enter",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 210,
+        "y": 400,
+        "wires": [
+            [
+                "a74a358e27f9e90d"
+            ]
+        ]
+    },
+    {
+        "id": "a74a358e27f9e90d",
+        "type": "switch",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "property": "free_place",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "gt",
+                "v": "0",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "0",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 430,
+        "y": 400,
+        "wires": [
+            [
+                "3d6a3039ef0f0cfc"
+            ],
+            [
+                "fb970076362efa4f"
+            ]
+        ]
+    },
+    {
+        "id": "9a33e8c8f06af903",
+        "type": "debug",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 810,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "a6b4d1f6aa86f109",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "Setup_freePlace",
+        "info": "",
+        "x": 220,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "3248915c6952b66c",
+        "type": "mqtt out",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "topic": "Iot/entrance",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c1d543f5.96274",
+        "x": 690,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "ec5e6a0a249fea10",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "func": "free_place = flow.get(\"free_place\");\nif(free_place <= 0){\n    return msg;\n}\nelse{\n    time_in = msg.payload.timestamp;\n    plate=msg.payload.results[0].plate;\n    var park_id = flow.get('car_index');\n    msg.topic=\"INSERT INTO cars (`id`,`plate`,`time_in`,`time_out`,`park_id`) VALUES (NULL,\\\"\"+plate+\"\\\",\\\"\"+time_in+\"\\\",NULL,\" + park_id +\");\"\n    var car = {id: null,plate: plate,time_in: msg.payload.timestamp,time_out: \"prova\"};\n    free_place = free_place - 1;\n    if(free_place > 50){\n        free_place = 50;\n    }\n    if(free_place < 0){\n        free_place = 0;\n    }\n    flow.set(\"free_place\",free_place); \n    msg.payload.free_place = free_place;\n    msg.payload.car = car;\n    \n    return msg;\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1400,
+        "y": 320,
+        "wires": [
+            [
+                "e970e4833bd31ff3",
+                "b17e01fe7f657bb2"
+            ]
+        ]
+    },
+    {
+        "id": "cabd2c8767412a39",
+        "type": "plate-recognizer",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "inputField": "payload",
+        "inputFieldType": "msg",
+        "outputField": "payload",
+        "outputFieldType": "msg",
+        "url": "https://api.platerecognizer.com/v1/plate-reader/",
+        "ignoreDuring": false,
+        "makeAndModel": false,
+        "statusText": "none",
+        "cameraId": "",
+        "separateMsg": false,
+        "regionFilter": false,
+        "regionList": "",
+        "regionListType": "json",
+        "x": 1200,
+        "y": 320,
+        "wires": [
+            [
+                "ec5e6a0a249fea10"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "c42bf10a1868bafa",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "New Car Leave:",
+        "info": "New Car:",
+        "x": 220,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "ad30e430e717a0fe",
+        "type": "inject",
+        "z": "7eb05ca743a737a6",
+        "name": "Car detected leave",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payloadType": "date",
+        "x": 190,
+        "y": 680,
+        "wires": [
+            [
+                "74e856cdc7c68219"
+            ]
+        ]
+    },
+    {
+        "id": "b84e85f083db2027",
+        "type": "mysql",
+        "z": "7eb05ca743a737a6",
+        "mydb": "9940627db2b4df4c",
+        "name": "",
+        "x": 1420,
+        "y": 680,
+        "wires": [
+            [
+                "44f994d2b6d14aa4"
+            ]
+        ]
+    },
+    {
+        "id": "2a1a08c038383dac",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "func": "//msg.payload={}\nfree_place = flow.get(\"free_place\");\ntime_in = msg.payload.timestamp;\nplate=msg.payload.results[0].plate;\nmsg.topic = \"UPDATE cars SET time_out = \\\"\"+time_in+\"\\\" WHERE plate=\\\"\"+plate+\"\\\";\"\n\nfree_place = free_place + 1;\nif(free_place > 50){\n    free_place = 50;\n}\nif(free_place < 0){\n    free_place = 0;\n}\nflow.set(\"free_place\",free_place); \nmsg.payload.free_place = free_place;\n\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1200,
+        "y": 680,
+        "wires": [
+            [
+                "b84e85f083db2027",
+                "bfbfd8b525d8deac"
+            ]
+        ]
+    },
+    {
+        "id": "8b42c85242dc7167",
+        "type": "plate-recognizer",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "inputField": "payload",
+        "inputFieldType": "msg",
+        "outputField": "payload",
+        "outputFieldType": "msg",
+        "url": "https://api.platerecognizer.com/v1/plate-reader/",
+        "ignoreDuring": false,
+        "makeAndModel": false,
+        "statusText": "none",
+        "cameraId": "",
+        "separateMsg": false,
+        "regionFilter": false,
+        "regionList": "",
+        "regionListType": "json",
+        "x": 1040,
+        "y": 680,
+        "wires": [
+            [
+                "2a1a08c038383dac"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "1b51fb1605fcf6b7",
+        "type": "http request",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "method": "use",
+        "ret": "bin",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 1010,
+        "y": 320,
+        "wires": [
+            [
+                "cabd2c8767412a39"
+            ]
+        ]
+    },
+    {
+        "id": "ad2be4ccfae66e87",
+        "type": "change",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "method",
+                "pt": "msg",
+                "to": "get",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "url",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 820,
+        "y": 320,
+        "wires": [
+            [
+                "1b51fb1605fcf6b7",
+                "05806c17ee90b375"
+            ]
+        ]
+    },
+    {
+        "id": "496f2948daafc383",
+        "type": "change",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "method",
+                "pt": "msg",
+                "to": "get",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "url",
+                "pt": "msg",
+                "to": "payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 660,
+        "y": 600,
+        "wires": [
+            [
+                "6ab32e57b863636e",
+                "5bb6e65bc6f90865"
+            ]
+        ]
+    },
+    {
+        "id": "6ab32e57b863636e",
+        "type": "http request",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "method": "use",
+        "ret": "bin",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 850,
+        "y": 680,
+        "wires": [
+            [
+                "8b42c85242dc7167"
+            ]
+        ]
+    },
+    {
+        "id": "c28bdd7890850ccf",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "Dashboard test",
+        "info": "__",
+        "x": 240,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "d24d6eebaa5b87da",
+        "type": "mqtt in",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "topic": "Iot/entrance",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c1d543f5.96274",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 230,
+        "y": 940,
+        "wires": [
+            [
+                "85ea58b813731647"
+            ]
+        ]
+    },
+    {
+        "id": "b0984f6ee70ad23d",
+        "type": "ui_gauge",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "group": "cea543bf4a5a19e2",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Free Places",
+        "label": "places",
+        "format": "{{msg.payload.free_place}}",
+        "min": 0,
+        "max": "10",
+        "colors": [
+            "#d10a27",
+            "#e6e600",
+            "#00ff03"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "x": 630,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "85ea58b813731647",
+        "type": "json",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 450,
+        "y": 940,
+        "wires": [
+            [
+                "b0984f6ee70ad23d"
+            ]
+        ]
+    },
+    {
+        "id": "bfbfd8b525d8deac",
+        "type": "mqtt out",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "topic": "Iot/entrance",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c1d543f5.96274",
+        "x": 1410,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "e970e4833bd31ff3",
+        "type": "mqtt out",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "topic": "Iot/entrance",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c1d543f5.96274",
+        "x": 1590,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "459acd647dfe5177",
+        "type": "mqtt in",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "topic": "Iot/cars",
+        "qos": "2",
+        "datatype": "auto",
+        "broker": "c1d543f5.96274",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "x": 220,
+        "y": 1040,
+        "wires": [
+            [
+                "9de17c310a20a2e9"
+            ]
+        ]
+    },
+    {
+        "id": "9de17c310a20a2e9",
+        "type": "json",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 380,
+        "y": 1040,
+        "wires": [
+            [
+                "fc52fe6febb7af13"
+            ]
+        ]
+    },
+    {
+        "id": "f49a25e0793d0c8f",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "output",
+        "func": "return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2070,
+        "y": 320,
+        "wires": [
+            [
+                "8366f791034eda28"
+            ]
+        ]
+    },
+    {
+        "id": "06f07727c9ccd15d",
+        "type": "mysql",
+        "z": "7eb05ca743a737a6",
+        "mydb": "9940627db2b4df4c",
+        "name": "",
+        "x": 1920,
+        "y": 320,
+        "wires": [
+            [
+                "f49a25e0793d0c8f"
+            ]
+        ]
+    },
+    {
+        "id": "c4d14e037c59167b",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "select",
+        "func": "msg.topic = \"SELECT * FROM cars;\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1750,
+        "y": 320,
+        "wires": [
+            [
+                "06f07727c9ccd15d"
+            ]
+        ]
+    },
+    {
+        "id": "8366f791034eda28",
+        "type": "mqtt out",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "topic": "Iot/cars",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c1d543f5.96274",
+        "x": 2240,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "fc52fe6febb7af13",
+        "type": "ui_table",
+        "z": "7eb05ca743a737a6",
+        "group": "cea543bf4a5a19e2",
+        "name": "Cars",
+        "order": 1,
+        "width": "0",
+        "height": "0",
+        "columns": [],
+        "outputs": 0,
+        "cts": false,
+        "x": 590,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "5c666cbb8f769f74",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "output",
+        "func": "return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1910,
+        "y": 680,
+        "wires": [
+            [
+                "68949231f589d817"
+            ]
+        ]
+    },
+    {
+        "id": "68f75b7261faa70e",
+        "type": "mysql",
+        "z": "7eb05ca743a737a6",
+        "mydb": "9940627db2b4df4c",
+        "name": "",
+        "x": 1760,
+        "y": 680,
+        "wires": [
+            [
+                "5c666cbb8f769f74"
+            ]
+        ]
+    },
+    {
+        "id": "44f994d2b6d14aa4",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "select",
+        "func": "msg.topic = \"SELECT * FROM cars;\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1590,
+        "y": 680,
+        "wires": [
+            [
+                "68f75b7261faa70e"
+            ]
+        ]
+    },
+    {
+        "id": "68949231f589d817",
+        "type": "mqtt out",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "topic": "Iot/cars",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c1d543f5.96274",
+        "x": 2120,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "05806c17ee90b375",
+        "type": "http request",
+        "z": "7eb05ca743a737a6",
+        "name": "camera image request",
+        "method": "use",
+        "ret": "bin",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 1140,
+        "y": 200,
+        "wires": [
+            [
+                "5c6b452d0658bcd1"
+            ]
+        ]
+    },
+    {
+        "id": "5bb6e65bc6f90865",
+        "type": "http request",
+        "z": "7eb05ca743a737a6",
+        "name": "camera image request",
+        "method": "use",
+        "ret": "bin",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 880,
+        "y": 580,
+        "wires": [
+            [
+                "17712d943904ecfc"
+            ]
+        ]
+    },
+    {
+        "id": "25c4b34d8c3ad043",
+        "type": "json",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "property": "payload",
+        "action": "str",
+        "pretty": false,
+        "x": 590,
+        "y": 1200,
+        "wires": [
+            [
+                "8d46fa1fe8228cd3"
+            ]
+        ]
+    },
+    {
+        "id": "8d46fa1fe8228cd3",
+        "type": "debug",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 780,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "a96e760adcb624a2",
+        "type": "http request",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "localhost:4000/enter.php",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "x": 390,
+        "y": 1200,
+        "wires": [
+            [
+                "25c4b34d8c3ad043"
+            ]
+        ]
+    },
+    {
+        "id": "52f310c1ac26eda5",
+        "type": "inject",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 210,
+        "y": 1200,
+        "wires": [
+            [
+                "a96e760adcb624a2"
+            ]
+        ]
+    },
+    {
+        "id": "3d6a3039ef0f0cfc",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "func": "var plates = [];\ncar_image_queue = flow.get('car_index')\ncar_image_queue = car_image_queue + 1;\nvar json_data = flow.get(\"plates\");\nfor(var i in json_data)\n    plates.push([i, json_data [i]]);\nmsg.payload = plates[car_image_queue][1];\nflow.set('car_index', car_image_queue);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 320,
+        "wires": [
+            [
+                "ad2be4ccfae66e87"
+            ]
+        ]
+    },
+    {
+        "id": "61e746b9de0d0784",
+        "type": "change",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "max_free_places",
+                "pt": "flow",
+                "to": "payload.free_place",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "plates",
+                "pt": "flow",
+                "to": "payload.plates",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "id",
+                "pt": "flow",
+                "to": "1",
+                "tot": "num"
+            },
+            {
+                "t": "set",
+                "p": "car_index",
+                "pt": "flow",
+                "to": "payload.car_index",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "free_place",
+                "pt": "flow",
+                "to": "payload.free_place",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "max_free_places",
+                "pt": "flow",
+                "to": "payload.free_place",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 440,
+        "y": 160,
+        "wires": [
+            [
+                "3248915c6952b66c",
+                "b2c65d8f87e890e6"
+            ]
+        ]
+    },
+    {
+        "id": "fb970076362efa4f",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "func": "note=\"No free places here..\"\npayload={free:0,note:note};\nmsg.payload=payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 440,
+        "wires": [
+            [
+                "9a33e8c8f06af903"
+            ]
+        ]
+    },
+    {
+        "id": "abeeeacbeafa72a3",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "func": "note=\"No cars in park place\"\npayload={free:0,note:note};\nmsg.payload=payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 740,
+        "wires": [
+            [
+                "d42b6372d27d4725"
+            ]
+        ]
+    },
+    {
+        "id": "74e856cdc7c68219",
+        "type": "switch",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "property": "free_place",
+        "propertyType": "flow",
+        "rules": [
+            {
+                "t": "lt",
+                "v": "max_free_places",
+                "vt": "flow"
+            },
+            {
+                "t": "gte",
+                "v": "max_free_places",
+                "vt": "flow"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 350,
+        "y": 680,
+        "wires": [
+            [
+                "5c9fa802e0476e57"
+            ],
+            [
+                "abeeeacbeafa72a3"
+            ]
+        ]
+    },
+    {
+        "id": "d42b6372d27d4725",
+        "type": "debug",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 670,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "5c9fa802e0476e57",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "func": "var plates = [];\nvar json_data = flow.get(\"plates\");\nfor(var i in json_data)\n    plates.push([i, json_data [i]]);\nvar car_image_queue = flow.get('car_index');\nmsg.payload = plates[car_image_queue][1];\ncar_image_queue = car_image_queue - 1;\nflow.set('car_index', car_image_queue);\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 600,
+        "wires": [
+            [
+                "496f2948daafc383"
+            ]
+        ]
+    },
+    {
+        "id": "98839357174cf7f4",
+        "type": "mqtt out",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "topic": "Iot/cars",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "c1d543f5.96274",
+        "x": 980,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "e0adee859ad01291",
+        "type": "mysql",
+        "z": "7eb05ca743a737a6",
+        "mydb": "9940627db2b4df4c",
+        "name": "",
+        "x": 800,
+        "y": 100,
+        "wires": [
+            [
+                "98839357174cf7f4"
+            ]
+        ]
+    },
+    {
+        "id": "b2c65d8f87e890e6",
+        "type": "function",
+        "z": "7eb05ca743a737a6",
+        "name": "select",
+        "func": "msg.topic = \"TRUNCATE cars;\";\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 100,
+        "wires": [
+            [
+                "e0adee859ad01291"
+            ]
+        ]
+    },
+    {
+        "id": "5c6b452d0658bcd1",
+        "type": "image",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "width": 160,
+        "data": "payload",
+        "dataType": "msg",
+        "thumbnail": false,
+        "active": true,
+        "pass": false,
+        "outputs": 0,
+        "x": 1380,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "17712d943904ecfc",
+        "type": "image",
+        "z": "7eb05ca743a737a6",
+        "name": "",
+        "width": 160,
+        "data": "payload",
+        "dataType": "msg",
+        "thumbnail": false,
+        "active": true,
+        "pass": false,
+        "outputs": 0,
+        "x": 1100,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "2a6809e6c1a649be",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "Check sui posti",
+        "info": "",
+        "x": 370,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "1100f7ca84cb3155",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "eventuale apertura gate",
+        "info": "",
+        "x": 520,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "dc7ea1cc149b2c2e",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "ip_webcam",
+        "info": "",
+        "x": 910,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "9dad82430230158a",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "rileva macchina",
+        "info": "",
+        "x": 110,
+        "y": 640,
+        "wires": []
+    },
+    {
+        "id": "e24c6e5bdf04a3dd",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "rileva macchina",
+        "info": "",
+        "x": 100,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "626ae20f65f7ee49",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "apertura gate_uscita",
+        "info": "",
+        "x": 1290,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "1696bccc2d4d4135",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "ip_webcam",
+        "info": "",
+        "x": 950,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "19a619a63d42f7aa",
+        "type": "comment",
+        "z": "7eb05ca743a737a6",
+        "name": "aggiornamento dashboard",
+        "info": "",
+        "x": 450,
+        "y": 880,
+        "wires": []
+    },
+    {
+        "id": "9940627db2b4df4c",
+        "type": "MySQLdatabase",
+        "name": "",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "parking",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
+        "id": "c1d543f5.96274",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "cea543bf4a5a19e2",
+        "type": "ui_group",
+        "name": "cars",
+        "tab": "996fbc6409b5cd3b",
+        "order": 1,
+        "disp": true,
+        "width": "12",
+        "collapse": false
+    },
+    {
+        "id": "996fbc6409b5cd3b",
+        "type": "ui_tab",
+        "name": "Parking_1",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
