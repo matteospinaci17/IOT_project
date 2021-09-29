@@ -41,3 +41,5 @@ Connect to MySQL in order to see the two different tables in database parking.
   
 Moreover, if you run a php server in the same directory of the .php files  
 this command: php -S localhost:4000 you can make http request to the database.
+  More informations about this project be found in this video presentation  
+https://drive.google.com/file/d/12pL41AbxzLZoF11Tgh2k7numcWg9tYEl/view?usp=sharing
